@@ -22,35 +22,48 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     const SHEET_URL =
       "https://docs.google.com/spreadsheets/d/e/2PACX-1vSeOtc-wh6amahFVCZqn7oXXAwNgM_B9rwRzH8kzVxH2lATSnokc6d4I6tW_wpW4WDjRqaR_r4iksX5/pub?gid=0&single=true&output=csv";
 
-    const formatDate = (date) =>
-      new Date(`${date}T12:00:00`).toLocaleDateString("en-CA", {
+    const clean = (value) => String(value || "").trim();
+
+    const escapeHtml = (value) =>
+      clean(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+    const formatDate = (date) => {
+      if (!date) return "";
+
+      const parsedDate = new Date(`${clean(date)}T12:00:00`);
+
+      if (isNaN(parsedDate.getTime())) {
+        return clean(date);
+      }
+
+      return parsedDate.toLocaleDateString("en-CA", {
         weekday: "long",
         year: "numeric",
         month: "long",
         day: "numeric",
       });
+    };
 
-const formatTime = (time) => {
-  if (!time) return "";
+    const formatTime = (time) => {
+      if (!time) return "";
 
-  try {
-    const date = new Date(`January 1, 2000 ${time}`);
+      const parsedTime = new Date(`January 1, 2000 ${clean(time)}`);
 
-    if (isNaN(date.getTime())) {
-      return time;
-    }
+      if (isNaN(parsedTime.getTime())) {
+        return clean(time);
+      }
 
-    return date.toLocaleTimeString("en-CA", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  } catch {
-    return time;
-  }
-};
-
-    const clean = (value) => value || "";
+      return parsedTime.toLocaleTimeString("en-CA", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    };
 
     async function getEvents() {
       const response = await fetch(SHEET_URL);
@@ -62,7 +75,7 @@ const formatTime = (time) => {
       });
 
       return parsed.data
-        .filter((event) => clean(event.published).trim().toUpperCase() === "TRUE")
+        .filter((event) => clean(event.published).toUpperCase() === "TRUE")
         .sort((a, b) => clean(a.date).localeCompare(clean(b.date)));
     }
 
@@ -83,16 +96,19 @@ const formatTime = (time) => {
       }
 
       container.innerHTML = events
-        .map(
-          (event) => `
+        .map((event) => {
+          const hasDirections = clean(event.mapUrl) !== "";
+          const hasPaypal = clean(event.paypalUrl) !== "";
+
+          return `
             <article class="rounded-2xl border border-orange-400/20 bg-stone-900 p-5">
               <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
-                Trail #${clean(event.trailNumber)}
+                Trail #${escapeHtml(event.trailNumber)}
               </p>
 
-              <h2 class="mt-2 text-2xl font-black">${clean(event.title)}</h2>
+              <h2 class="mt-2 text-2xl font-black">${escapeHtml(event.title)}</h2>
 
-              <p class="mt-2 text-stone-300">${clean(event.description)}</p>
+              <p class="mt-2 text-stone-300">${escapeHtml(event.description)}</p>
 
               <dl class="mt-5 grid gap-3 text-sm sm:grid-cols-2">
                 <div>
@@ -107,38 +123,66 @@ const formatTime = (time) => {
 
                 <div>
                   <dt class="text-stone-500">Location</dt>
-                  <dd class="font-bold">${clean(event.locationName)}</dd>
-                  <dd class="text-stone-400">${clean(event.address)}</dd>
+                  <dd class="font-bold">${escapeHtml(event.locationName) || "TBA"}</dd>
+                  <dd class="text-stone-400">${escapeHtml(event.address)}</dd>
                 </div>
 
                 <div>
                   <dt class="text-stone-500">Hares</dt>
-                  <dd class="font-bold">${clean(event.hares)}</dd>
+                  <dd class="font-bold">${escapeHtml(event.hares) || "TBA"}</dd>
                 </div>
 
                 <div>
                   <dt class="text-stone-500">Theme</dt>
-                  <dd class="font-bold">${clean(event.theme)}</dd>
+                  <dd class="font-bold">${escapeHtml(event.theme) || "TBA"}</dd>
                 </div>
 
                 <div>
                   <dt class="text-stone-500">Hash Cash</dt>
-                  <dd class="font-bold">$${clean(event.hashCash)}</dd>
+                  <dd class="font-bold">$${escapeHtml(event.hashCash)}</dd>
                 </div>
               </dl>
 
-              <div class="mt-6 flex flex-wrap gap-3">
-                <a href="${clean(event.mapUrl) || "#"}" target="_blank" rel="noopener noreferrer" class="rounded-xl bg-orange-500 px-4 py-2 font-bold text-stone-950 hover:bg-orange-400">
-                  Get Directions
-                </a>
+              ${
+                hasDirections || hasPaypal
+                  ? `
+                    <div class="mt-6 flex flex-wrap gap-3">
+                      ${
+                        hasDirections
+                          ? `
+                            <a
+                              href="${escapeHtml(event.mapUrl)}"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="rounded-xl bg-orange-500 px-4 py-2 font-bold text-stone-950 hover:bg-orange-400"
+                            >
+                              Get Directions
+                            </a>
+                          `
+                          : ""
+                      }
 
-                <a href="${clean(event.paypalUrl) || "#"}" target="_blank" rel="noopener noreferrer" class="rounded-xl border border-stone-700 px-4 py-2 font-bold hover:bg-stone-800">
-                  Pay Hash Cash
-                </a>
-              </div>
+                      ${
+                        hasPaypal
+                          ? `
+                            <a
+                              href="${escapeHtml(event.paypalUrl)}"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="rounded-xl border border-stone-700 px-4 py-2 font-bold hover:bg-stone-800"
+                            >
+                              Pay Hash Cash
+                            </a>
+                          `
+                          : ""
+                      }
+                    </div>
+                  `
+                  : ""
+              }
             </article>
-          `
-        )
+          `;
+        })
         .join("");
     }
 

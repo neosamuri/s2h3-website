@@ -8,14 +8,34 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
   <section class="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-10">
     <section class="grid items-center gap-8 border-b border-orange-400/20 pb-10 md:grid-cols-[1fr_320px]">
       <div class="flex flex-col gap-4">
-        <p class="text-sm font-bold uppercase tracking-[0.3em] text-orange-300">S2H3</p>
+        <p class="text-sm font-bold uppercase tracking-[0.3em] text-orange-300">
+          S2H3
+        </p>
+
         <h1 class="text-4xl font-black tracking-tight sm:text-6xl">
           Sloppy Saturday Hash House Harriers
         </h1>
+
         <p class="max-w-2xl text-lg text-stone-300">
           A drinking club with a running problem. Trails, beer, shiggy, songs,
           and questionable decisions on Saturdays.
         </p>
+
+        <div class="flex flex-wrap gap-3 pt-2">
+          <a
+            href="/hareline"
+            class="rounded-xl bg-orange-500 px-5 py-3 font-black text-stone-950 hover:bg-orange-400"
+          >
+            View Hare Line
+          </a>
+
+          <a
+            href="/about"
+            class="rounded-xl border border-stone-700 px-5 py-3 font-bold hover:bg-stone-900"
+          >
+            New Hasher?
+          </a>
+        </div>
       </div>
 
       <img
@@ -32,6 +52,32 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
         </p>
       </div>
     </section>
+
+    <section class="grid gap-4 md:grid-cols-3">
+      <div class="rounded-2xl bg-stone-900 p-5">
+        <h3 class="text-xl font-black">What is hashing?</h3>
+        <p class="mt-2 text-stone-400">
+          Part trail run, part scavenger hunt, part social club. Follow flour,
+          find beer, sing badly.
+        </p>
+      </div>
+
+      <div class="rounded-2xl bg-stone-900 p-5">
+        <h3 class="text-xl font-black">All paces welcome</h3>
+        <p class="mt-2 text-stone-400">
+          Runners, walkers, stumblers, and professional shortcutters are all
+          welcome.
+        </p>
+      </div>
+
+      <div class="rounded-2xl bg-stone-900 p-5">
+        <h3 class="text-xl font-black">Saturday trails</h3>
+        <p class="mt-2 text-stone-400">
+          Sloppy by name, sloppy by nature. Watch this space for the next hare
+          line.
+        </p>
+      </div>
+    </section>
   </section>
 
   <script define:vars={{ googleMapsApiKey }} type="module">
@@ -40,11 +86,24 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
     const SHEET_URL =
       "https://docs.google.com/spreadsheets/d/e/2PACX-1vSeOtc-wh6amahFVCZqn7oXXAwNgM_B9rwRzH8kzVxH2lATSnokc6d4I6tW_wpW4WDjRqaR_r4iksX5/pub?gid=0&single=true&output=csv";
 
-    const clean = (value) => value || "";
+    const clean = (value) => String(value || "").trim();
+
+    const escapeHtml = (value) =>
+      clean(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 
     const formatDate = (date) => {
-      const parsedDate = new Date(`${date}T12:00:00`);
-      if (isNaN(parsedDate.getTime())) return date;
+      if (!date) return "";
+
+      const parsedDate = new Date(`${clean(date)}T12:00:00`);
+
+      if (isNaN(parsedDate.getTime())) {
+        return clean(date);
+      }
 
       return parsedDate.toLocaleDateString("en-CA", {
         weekday: "long",
@@ -55,8 +114,13 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
     };
 
     const formatTime = (time) => {
-      const parsedTime = new Date(`January 1, 2000 ${time}`);
-      if (isNaN(parsedTime.getTime())) return time;
+      if (!time) return "";
+
+      const parsedTime = new Date(`January 1, 2000 ${clean(time)}`);
+
+      if (isNaN(parsedTime.getTime())) {
+        return clean(time);
+      }
 
       return parsedTime.toLocaleTimeString("en-CA", {
         hour: "numeric",
@@ -68,15 +132,26 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
     const getEventDateTime = (event) => {
       const date = clean(event.date);
       const time = clean(event.time);
-      return new Date(`${date} ${time}`);
+
+      if (!date || !time) return null;
+
+      const eventDate = new Date(`${date} ${time}`);
+
+      if (isNaN(eventDate.getTime())) {
+        return null;
+      }
+
+      return eventDate;
     };
 
     const getCountdown = (event) => {
       const eventDate = getEventDateTime(event);
+
+      if (!eventDate) return "Date TBA";
+
       const now = new Date();
       const diff = eventDate - now;
 
-      if (isNaN(eventDate.getTime())) return "Date TBA";
       if (diff <= 0) return "Trail is today or already started";
 
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -96,7 +171,7 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
       });
 
       return parsed.data
-        .filter((event) => clean(event.published).trim().toUpperCase() === "TRUE")
+        .filter((event) => clean(event.published).toUpperCase() === "TRUE")
         .sort((a, b) => clean(a.date).localeCompare(clean(b.date)));
     }
 
@@ -106,18 +181,108 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
       if (!event) {
         container.innerHTML = `
           <section class="rounded-3xl border border-orange-400/30 bg-stone-900 p-6">
-            <h2 class="text-3xl font-black">No published trails yet</h2>
+            <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
+              Next Hash
+            </p>
+            <h2 class="mt-3 text-3xl font-black">No published trails yet</h2>
             <p class="mt-3 text-stone-300">Check back soon.</p>
           </section>
         `;
         return;
       }
 
+      const hasMap =
+        clean(event.address) !== "" ||
+        clean(event.locationName) !== "" ||
+        clean(event.mapUrl) !== "";
+
+      const hasGoogleMapEmbed =
+        Boolean(googleMapsApiKey) &&
+        (clean(event.address) !== "" || clean(event.locationName) !== "");
+
+      const hasDirections = clean(event.mapUrl) !== "";
+      const hasPaypal = clean(event.paypalUrl) !== "";
+
       const addressQuery = encodeURIComponent(
         `${clean(event.locationName)} ${clean(event.address)}`
       );
 
-      const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=${addressQuery}`;
+      const mapEmbedUrl = hasGoogleMapEmbed
+        ? `https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=${addressQuery}`
+        : "";
+
+      const buttonsHtml = `
+        <div class="mt-6 flex flex-wrap gap-3">
+          ${
+            hasDirections
+              ? `
+                <a
+                  href="${escapeHtml(event.mapUrl)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="rounded-xl bg-orange-500 px-5 py-3 font-black text-stone-950 hover:bg-orange-400"
+                >
+                  Get Directions
+                </a>
+              `
+              : ""
+          }
+
+          ${
+            hasPaypal
+              ? `
+                <a
+                  href="${escapeHtml(event.paypalUrl)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="rounded-xl border border-stone-700 px-5 py-3 font-bold hover:bg-stone-800"
+                >
+                  Pay Hash Cash
+                </a>
+              `
+              : ""
+          }
+        </div>
+      `;
+
+      const mapHtml = hasMap
+        ? hasGoogleMapEmbed
+          ? `
+            <div class="overflow-hidden rounded-2xl border border-stone-800 bg-stone-950 lg:min-h-[490px]">
+              <iframe
+                title="Next hash map"
+                src="${mapEmbedUrl}"
+                class="h-[360px] w-full lg:h-full lg:min-h-[490px]"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                allowfullscreen
+              ></iframe>
+            </div>
+          `
+          : `
+            <div class="flex items-center justify-center rounded-2xl border border-stone-800 bg-stone-950 p-8 lg:min-h-[490px]">
+              <div class="text-center">
+                <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
+                  Map unavailable
+                </p>
+                <p class="mt-3 text-stone-400">
+                  Add a Google Maps API key or use the directions button.
+                </p>
+              </div>
+            </div>
+          `
+        : `
+          <div class="flex items-center justify-center rounded-2xl border border-stone-800 bg-stone-950 p-8 lg:min-h-[490px]">
+            <div class="text-center">
+              <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
+                Location TBA
+              </p>
+              <p class="mt-3 text-stone-400">
+                The hare has not published a location yet.
+              </p>
+            </div>
+          </div>
+        `;
 
       container.innerHTML = `
         <section class="rounded-3xl border border-orange-400/30 bg-stone-900 p-6 shadow-2xl shadow-orange-950/20">
@@ -128,11 +293,11 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
           <div class="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
               <h2 class="text-3xl font-black sm:text-5xl">
-                Trail #${clean(event.trailNumber)}: ${clean(event.title)}
+                Trail #${escapeHtml(event.trailNumber)}: ${escapeHtml(event.title)}
               </h2>
 
               <p class="mt-4 text-xl text-stone-300">
-                ${clean(event.description)}
+                ${escapeHtml(event.description)}
               </p>
 
               <div class="mt-6 rounded-2xl border border-orange-400/20 bg-stone-950 p-5">
@@ -149,56 +314,33 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
                   <dt class="text-stone-500">Date</dt>
                   <dd class="font-bold">${formatDate(event.date)}</dd>
                 </div>
+
                 <div>
                   <dt class="text-stone-500">Time</dt>
                   <dd class="font-bold">${formatTime(event.time)}</dd>
                 </div>
+
                 <div>
                   <dt class="text-stone-500">Location</dt>
-                  <dd class="font-bold">${clean(event.locationName)}</dd>
-                  <dd class="text-stone-400">${clean(event.address)}</dd>
+                  <dd class="font-bold">${escapeHtml(event.locationName) || "TBA"}</dd>
+                  <dd class="text-stone-400">${escapeHtml(event.address)}</dd>
                 </div>
+
                 <div>
                   <dt class="text-stone-500">Hares</dt>
-                  <dd class="font-bold">${clean(event.hares)}</dd>
+                  <dd class="font-bold">${escapeHtml(event.hares) || "TBA"}</dd>
                 </div>
+
                 <div>
                   <dt class="text-stone-500">Hash Cash</dt>
-                  <dd class="font-bold">$${clean(event.hashCash)}</dd>
+                  <dd class="font-bold">$${escapeHtml(event.hashCash)}</dd>
                 </div>
               </dl>
 
-              <div class="mt-6 flex flex-wrap gap-3">
-                <a
-                  href="${clean(event.mapUrl) || "#"}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="rounded-xl bg-orange-500 px-5 py-3 font-black text-stone-950 hover:bg-orange-400"
-                >
-                  Get Directions
-                </a>
-
-                <a
-                  href="${clean(event.paypalUrl) || "#"}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="rounded-xl border border-stone-700 px-5 py-3 font-bold hover:bg-stone-800"
-                >
-                  Pay Hash Cash
-                </a>
-              </div>
+              ${buttonsHtml}
             </div>
 
-            <div class="overflow-hidden rounded-2xl border border-stone-800 bg-stone-950 lg:min-h-[490px]">
-  <iframe
-    title="Next hash map"
-    src="${mapEmbedUrl}"
-    class="h-[360px] w-full lg:h-full lg:min-h-[490px]"
-    loading="lazy"
-    referrerpolicy="no-referrer-when-downgrade"
-    allowfullscreen
-  ></iframe>
-</div>
+            ${mapHtml}
           </div>
         </section>
       `;
