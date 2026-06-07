@@ -113,29 +113,52 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
       });
     };
 
-    const formatTime = (time) => {
-      if (!time) return "";
+    const parseTime = (time) => {
+      if (!time) return null;
 
       const parsedTime = new Date(`January 1, 2000 ${clean(time)}`);
 
       if (isNaN(parsedTime.getTime())) {
-        return clean(time);
+        return null;
       }
 
-      return parsedTime.toLocaleTimeString("en-CA", {
+      return parsedTime;
+    };
+
+    const formatTimeFromDate = (date) =>
+      date.toLocaleTimeString("en-CA", {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
       });
+
+    const formatTime = (time) => {
+      const parsedTime = parseTime(time);
+      return parsedTime ? formatTimeFromDate(parsedTime) : clean(time);
     };
 
-    const getEventDateTime = (event) => {
+    const addMinutes = (time, minutesToAdd) => {
+      const parsedTime = parseTime(time);
+
+      if (!parsedTime) {
+        return clean(time);
+      }
+
+      parsedTime.setMinutes(parsedTime.getMinutes() + minutesToAdd);
+      return formatTimeFromDate(parsedTime);
+    };
+
+    const getEventDateTime = (event, minutesToAdd = 0) => {
       const date = clean(event.date);
       const time = clean(event.time);
 
       if (!date || !time) return null;
 
-      const eventDate = new Date(`${date} ${time}`);
+      const parsedTime = parseTime(time);
+      if (!parsedTime) return null;
+
+      const eventDate = new Date(`${date}T00:00:00`);
+      eventDate.setHours(parsedTime.getHours(), parsedTime.getMinutes() + minutesToAdd, 0, 0);
 
       if (isNaN(eventDate.getTime())) {
         return null;
@@ -145,7 +168,7 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
     };
 
     const getCountdown = (event) => {
-      const eventDate = getEventDateTime(event);
+      const eventDate = getEventDateTime(event, 15);
 
       if (!eventDate) return "Date TBA";
 
@@ -316,8 +339,18 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
                 </div>
 
                 <div>
-                  <dt class="text-stone-500">Time</dt>
+                  <dt class="text-stone-500">Pack Gathers</dt>
                   <dd class="font-bold">${formatTime(event.time)}</dd>
+                </div>
+
+                <div>
+                  <dt class="text-stone-500">Hares Away</dt>
+                  <dd class="font-bold">${addMinutes(event.time, 15)}</dd>
+                </div>
+
+                <div>
+                  <dt class="text-stone-500">On Out</dt>
+                  <dd class="font-bold">${addMinutes(event.time, 30)}</dd>
                 </div>
 
                 <div>

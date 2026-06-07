@@ -49,20 +49,39 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       });
     };
 
-    const formatTime = (time) => {
-      if (!time) return "";
+    const parseTime = (time) => {
+      if (!time) return null;
 
       const parsedTime = new Date(`January 1, 2000 ${clean(time)}`);
 
       if (isNaN(parsedTime.getTime())) {
-        return clean(time);
+        return null;
       }
 
-      return parsedTime.toLocaleTimeString("en-CA", {
+      return parsedTime;
+    };
+
+    const formatTimeFromDate = (date) =>
+      date.toLocaleTimeString("en-CA", {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
       });
+
+    const formatTime = (time) => {
+      const parsedTime = parseTime(time);
+      return parsedTime ? formatTimeFromDate(parsedTime) : clean(time);
+    };
+
+    const addMinutes = (time, minutesToAdd) => {
+      const parsedTime = parseTime(time);
+
+      if (!parsedTime) {
+        return clean(time);
+      }
+
+      parsedTime.setMinutes(parsedTime.getMinutes() + minutesToAdd);
+      return formatTimeFromDate(parsedTime);
     };
 
     async function getEvents() {
@@ -117,8 +136,18 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                 </div>
 
                 <div>
-                  <dt class="text-stone-500">Time</dt>
+                  <dt class="text-stone-500">Pack Gathers</dt>
                   <dd class="font-bold">${formatTime(event.time)}</dd>
+                </div>
+
+                <div>
+                  <dt class="text-stone-500">Hares Away</dt>
+                  <dd class="font-bold">${addMinutes(event.time, 15)}</dd>
+                </div>
+
+                <div>
+                  <dt class="text-stone-500">On Out</dt>
+                  <dd class="font-bold">${addMinutes(event.time, 30)}</dd>
                 </div>
 
                 <div>
