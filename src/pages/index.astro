@@ -1,48 +1,28 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+
+const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
 ---
 
 <BaseLayout title="S2H3 | Sloppy Saturday Hash House Harriers">
   <section class="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-10">
     <section class="grid items-center gap-8 border-b border-orange-400/20 pb-10 md:grid-cols-[1fr_320px]">
       <div class="flex flex-col gap-4">
-        <p class="text-sm font-bold uppercase tracking-[0.3em] text-orange-300">
-          S2H3
-        </p>
-
+        <p class="text-sm font-bold uppercase tracking-[0.3em] text-orange-300">S2H3</p>
         <h1 class="text-4xl font-black tracking-tight sm:text-6xl">
           Sloppy Saturday Hash House Harriers
         </h1>
-
         <p class="max-w-2xl text-lg text-stone-300">
           A drinking club with a running problem. Trails, beer, shiggy, songs,
           and questionable decisions on Saturdays.
         </p>
-
-        <div class="flex flex-wrap gap-3 pt-2">
-          <a
-            href="/hareline"
-            class="rounded-xl bg-orange-500 px-5 py-3 font-black text-stone-950 hover:bg-orange-400"
-          >
-            View Hare Line
-          </a>
-
-          <a
-            href="/about"
-            class="rounded-xl border border-stone-700 px-5 py-3 font-bold hover:bg-stone-900"
-          >
-            What is S2H3?
-          </a>
-        </div>
       </div>
 
-      <div class="mx-auto w-full max-w-[280px] md:max-w-[320px]">
-        <img
-          src="/images/s2h3-logo.png"
-          alt="S2H3 logo"
-          class="w-full rounded-full shadow-2xl shadow-orange-950/30"
-        />
-      </div>
+      <img
+        src="/images/s2h3-logo.png"
+        alt="S2H3 logo"
+        class="mx-auto w-full max-w-[280px] rounded-full shadow-2xl shadow-orange-950/30"
+      />
     </section>
 
     <section id="next-hash">
@@ -52,35 +32,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         </p>
       </div>
     </section>
-
-    <section class="grid gap-4 md:grid-cols-3">
-      <div class="rounded-2xl bg-stone-900 p-5">
-        <h3 class="text-xl font-black">What is hashing?</h3>
-        <p class="mt-2 text-stone-400">
-          Part trail run, part scavenger hunt, part social club. Follow flour,
-          find beer, sing badly.
-        </p>
-      </div>
-
-      <div class="rounded-2xl bg-stone-900 p-5">
-        <h3 class="text-xl font-black">All paces welcome</h3>
-        <p class="mt-2 text-stone-400">
-          Runners, walkers, stumblers, and professional shortcutters are all
-          welcome.
-        </p>
-      </div>
-
-      <div class="rounded-2xl bg-stone-900 p-5">
-        <h3 class="text-xl font-black">Saturday trails</h3>
-        <p class="mt-2 text-stone-400">
-          Sloppy by name, sloppy by nature. Watch this space for the next hare
-          line.
-        </p>
-      </div>
-    </section>
   </section>
 
-  <script type="module">
+  <script define:vars={{ googleMapsApiKey }} type="module">
     import Papa from "https://cdn.jsdelivr.net/npm/papaparse@5.4.1/+esm";
 
     const SHEET_URL =
@@ -89,13 +43,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     const clean = (value) => value || "";
 
     const formatDate = (date) => {
-      if (!date) return "";
-
       const parsedDate = new Date(`${date}T12:00:00`);
-
-      if (isNaN(parsedDate.getTime())) {
-        return date;
-      }
+      if (isNaN(parsedDate.getTime())) return date;
 
       return parsedDate.toLocaleDateString("en-CA", {
         weekday: "long",
@@ -106,19 +55,35 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     };
 
     const formatTime = (time) => {
-      if (!time) return "";
-
       const parsedTime = new Date(`January 1, 2000 ${time}`);
-
-      if (isNaN(parsedTime.getTime())) {
-        return time;
-      }
+      if (isNaN(parsedTime.getTime())) return time;
 
       return parsedTime.toLocaleTimeString("en-CA", {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
       });
+    };
+
+    const getEventDateTime = (event) => {
+      const date = clean(event.date);
+      const time = clean(event.time);
+      return new Date(`${date} ${time}`);
+    };
+
+    const getCountdown = (event) => {
+      const eventDate = getEventDateTime(event);
+      const now = new Date();
+      const diff = eventDate - now;
+
+      if (isNaN(eventDate.getTime())) return "Date TBA";
+      if (diff <= 0) return "Trail is today or already started";
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+
+      return `${days} days, ${hours} hours, ${minutes} minutes`;
     };
 
     async function getEvents() {
@@ -141,15 +106,18 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       if (!event) {
         container.innerHTML = `
           <section class="rounded-3xl border border-orange-400/30 bg-stone-900 p-6">
-            <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
-              Next Hash
-            </p>
-            <h2 class="mt-3 text-3xl font-black">No published trails yet</h2>
+            <h2 class="text-3xl font-black">No published trails yet</h2>
             <p class="mt-3 text-stone-300">Check back soon.</p>
           </section>
         `;
         return;
       }
+
+      const addressQuery = encodeURIComponent(
+        `${clean(event.locationName)} ${clean(event.address)}`
+      );
+
+      const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=${addressQuery}`;
 
       container.innerHTML = `
         <section class="rounded-3xl border border-orange-400/30 bg-stone-900 p-6 shadow-2xl shadow-orange-950/20">
@@ -157,51 +125,55 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             Next Hash
           </p>
 
-          <div class="grid gap-8 md:grid-cols-[1.2fr_0.8fr]">
+          <div class="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
               <h2 class="text-3xl font-black sm:text-5xl">
                 Trail #${clean(event.trailNumber)}: ${clean(event.title)}
               </h2>
+
               <p class="mt-4 text-xl text-stone-300">
                 ${clean(event.description)}
               </p>
-            </div>
 
-            <div class="rounded-2xl bg-stone-950 p-5">
-              <dl class="space-y-4">
+              <div class="mt-6 rounded-2xl border border-orange-400/20 bg-stone-950 p-5">
+                <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
+                  Starts In
+                </p>
+                <p id="countdown" class="mt-2 text-3xl font-black">
+                  ${getCountdown(event)}
+                </p>
+              </div>
+
+              <dl class="mt-6 grid gap-4 text-sm sm:grid-cols-2">
                 <div>
-                  <dt class="text-sm text-stone-500">Date</dt>
+                  <dt class="text-stone-500">Date</dt>
                   <dd class="font-bold">${formatDate(event.date)}</dd>
                 </div>
-
                 <div>
-                  <dt class="text-sm text-stone-500">Time</dt>
+                  <dt class="text-stone-500">Time</dt>
                   <dd class="font-bold">${formatTime(event.time)}</dd>
                 </div>
-
                 <div>
-                  <dt class="text-sm text-stone-500">Location</dt>
+                  <dt class="text-stone-500">Location</dt>
                   <dd class="font-bold">${clean(event.locationName)}</dd>
                   <dd class="text-stone-400">${clean(event.address)}</dd>
                 </div>
-
                 <div>
-                  <dt class="text-sm text-stone-500">Hares</dt>
+                  <dt class="text-stone-500">Hares</dt>
                   <dd class="font-bold">${clean(event.hares)}</dd>
                 </div>
-
                 <div>
-                  <dt class="text-sm text-stone-500">Hash Cash</dt>
+                  <dt class="text-stone-500">Hash Cash</dt>
                   <dd class="font-bold">$${clean(event.hashCash)}</dd>
                 </div>
               </dl>
 
-              <div class="mt-6 grid gap-3">
+              <div class="mt-6 flex flex-wrap gap-3">
                 <a
                   href="${clean(event.mapUrl) || "#"}"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="rounded-xl bg-orange-500 px-5 py-3 text-center font-black text-stone-950 hover:bg-orange-400"
+                  class="rounded-xl bg-orange-500 px-5 py-3 font-black text-stone-950 hover:bg-orange-400"
                 >
                   Get Directions
                 </a>
@@ -210,15 +182,31 @@ import BaseLayout from "../layouts/BaseLayout.astro";
                   href="${clean(event.paypalUrl) || "#"}"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="rounded-xl border border-stone-700 px-5 py-3 text-center font-bold hover:bg-stone-800"
+                  class="rounded-xl border border-stone-700 px-5 py-3 font-bold hover:bg-stone-800"
                 >
                   Pay Hash Cash
                 </a>
               </div>
             </div>
+
+            <div class="overflow-hidden rounded-2xl border border-stone-800 bg-stone-950 lg:min-h-[490px]">
+  <iframe
+    title="Next hash map"
+    src="${mapEmbedUrl}"
+    class="h-[360px] w-full lg:h-full lg:min-h-[490px]"
+    loading="lazy"
+    referrerpolicy="no-referrer-when-downgrade"
+    allowfullscreen
+  ></iframe>
+</div>
           </div>
         </section>
       `;
+
+      setInterval(() => {
+        const countdown = document.querySelector("#countdown");
+        if (countdown) countdown.textContent = getCountdown(event);
+      }, 60000);
     }
 
     getEvents()
