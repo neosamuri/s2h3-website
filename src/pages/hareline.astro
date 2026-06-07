@@ -30,12 +30,25 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         day: "numeric",
       });
 
-    const formatTime = (time) =>
-      new Date(`2000-01-01T${time}`).toLocaleTimeString("en-CA", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      });
+const formatTime = (time) => {
+  if (!time) return "";
+
+  try {
+    const date = new Date(`January 1, 2000 ${time}`);
+
+    if (isNaN(date.getTime())) {
+      return time;
+    }
+
+    return date.toLocaleTimeString("en-CA", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return time;
+  }
+};
 
     const clean = (value) => value || "";
 
