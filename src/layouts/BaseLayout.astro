@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+
 const { title = "S2H3 | Sloppy Saturday Hash House Harriers" } = Astro.props;
 
 const navItems = [
@@ -19,18 +20,25 @@ const navItems = [
   </head>
 
   <body class="min-h-screen bg-stone-950 text-stone-100">
-    <header class="border-b border-orange-400/20 bg-stone-950/90">
-      <div class="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-        <a href="/" class="flex flex-col leading-tight">
-          <span class="text-xl font-black tracking-tight text-orange-300">S2H3</span>
-          <span class="text-xs uppercase tracking-[0.25em] text-stone-400">
-            Sloppy Saturday H3
-          </span>
-        </a>
+    <header class="border-b border-orange-400/20 bg-stone-950">
+      <div class="mx-auto max-w-6xl px-5 py-4">
+        <div class="flex items-center justify-between gap-4">
+          <a href="/" class="flex flex-col leading-tight">
+            <span class="text-xl font-black tracking-tight text-orange-300">
+              S2H3
+            </span>
+            <span class="text-xs uppercase tracking-[0.25em] text-stone-400">
+              Sloppy Saturday H3
+            </span>
+          </a>
+        </div>
 
-        <nav class="hidden gap-5 text-sm font-bold text-stone-300 md:flex">
+        <nav class="mt-4 flex flex-wrap gap-3 text-sm font-bold text-stone-300">
           {navItems.map((item) => (
-            <a href={item.href} class="hover:text-orange-300">
+            <a
+              href={item.href}
+              class="rounded-full border border-stone-800 px-3 py-2 hover:border-orange-300 hover:text-orange-300"
+            >
               {item.label}
             </a>
           ))}
