@@ -1,0 +1,79 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { events } from "../data/events";
+
+const nextHash = events[0];
+---
+
+<BaseLayout title="S2H3 | Sloppy Saturday Hash House Harriers">
+  <section class="mx-auto flex max-w-5xl flex-col gap-10 px-6 py-10">
+    <section class="flex flex-col gap-3 border-b border-orange-400/20 pb-8">
+      <p class="text-sm font-bold uppercase tracking-[0.3em] text-orange-300">
+        S2H3
+      </p>
+      <h1 class="text-4xl font-black tracking-tight sm:text-6xl">
+        Sloppy Saturday Hash House Harriers
+      </h1>
+      <p class="max-w-2xl text-lg text-stone-300">
+        A drinking club with a running problem. Trails, beer, shiggy, songs,
+        and questionable decisions on Saturdays.
+      </p>
+    </section>
+
+    <section class="rounded-3xl border border-orange-400/30 bg-stone-900 p-6 shadow-2xl shadow-orange-950/20">
+      <p class="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
+        Next Hash
+      </p>
+
+      <div class="grid gap-8 md:grid-cols-[1.2fr_0.8fr]">
+        <div>
+          <h2 class="text-3xl font-black sm:text-5xl">
+            Trail #{nextHash.trailNumber}: {nextHash.title}
+          </h2>
+          <p class="mt-4 text-xl text-stone-300">{nextHash.description}</p>
+        </div>
+
+        <div class="rounded-2xl bg-stone-950 p-5">
+          <dl class="space-y-4">
+            <div>
+              <dt class="text-sm text-stone-500">Date</dt>
+              <dd class="font-bold">{nextHash.date}</dd>
+            </div>
+            <div>
+              <dt class="text-sm text-stone-500">Time</dt>
+              <dd class="font-bold">{nextHash.time}</dd>
+            </div>
+            <div>
+              <dt class="text-sm text-stone-500">Location</dt>
+              <dd class="font-bold">{nextHash.locationName}</dd>
+              <dd class="text-stone-400">{nextHash.address}</dd>
+            </div>
+            <div>
+              <dt class="text-sm text-stone-500">Hares</dt>
+              <dd class="font-bold">{nextHash.hares}</dd>
+            </div>
+            <div>
+              <dt class="text-sm text-stone-500">Hash Cash</dt>
+              <dd class="font-bold">${nextHash.hashCash}</dd>
+            </div>
+          </dl>
+
+          <div class="mt-6 grid gap-3">
+            <a
+              href="#"
+              class="rounded-xl bg-orange-500 px-5 py-3 text-center font-black text-stone-950 hover:bg-orange-400"
+            >
+              Get Directions
+            </a>
+            <a
+              href="#"
+              class="rounded-xl border border-stone-700 px-5 py-3 text-center font-bold hover:bg-stone-800"
+            >
+              Pay Hash Cash
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+</BaseLayout>

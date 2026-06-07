@@ -1,0 +1,45 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { events } from "../data/events";
+---
+
+<BaseLayout title="Hare Line | S2H3">
+  <section class="mx-auto max-w-5xl px-6 py-10">
+    <h1 class="text-4xl font-black">Hare Line</h1>
+    <p class="mt-3 text-stone-300">
+      Upcoming Sloppy Saturday trails.
+    </p>
+
+    <div class="mt-8 grid gap-5">
+      {events.map((event) => (
+        <article class="rounded-2xl border border-orange-400/20 bg-stone-900 p-5">
+          <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
+            Trail #{event.trailNumber}
+          </p>
+          <h2 class="mt-2 text-2xl font-black">{event.title}</h2>
+          <p class="mt-2 text-stone-300">{event.description}</p>
+
+          <dl class="mt-5 grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <dt class="text-stone-500">Date</dt>
+              <dd class="font-bold">{event.displayDate}</dd>
+            </div>
+            <div>
+              <dt class="text-stone-500">Time</dt>
+              <dd class="font-bold">{event.time}</dd>
+            </div>
+            <div>
+              <dt class="text-stone-500">Location</dt>
+              <dd class="font-bold">{event.locationName}</dd>
+              <dd class="text-stone-400">{event.address}</dd>
+            </div>
+            <div>
+              <dt class="text-stone-500">Hares</dt>
+              <dd class="font-bold">{event.hares}</dd>
+            </div>
+          </dl>
+        </article>
+      ))}
+    </div>
+  </section>
+</BaseLayout>
