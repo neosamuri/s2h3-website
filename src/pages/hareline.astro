@@ -17,6 +17,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   </section>
 
   <script type="module">
+
     import Papa from "https://cdn.jsdelivr.net/npm/papaparse@5.4.1/+esm";
 
     const SHEET_URL =
@@ -32,33 +33,22 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
 
+    const parseTime = (time) => {
+      if (!time) return null;
+      const parsedTime = new Date(`January 1, 2000 ${clean(time)}`);
+      return isNaN(parsedTime.getTime()) ? null : parsedTime;
+    };
+
     const formatDate = (date) => {
       if (!date) return "";
-
       const parsedDate = new Date(`${clean(date)}T12:00:00`);
-
-      if (isNaN(parsedDate.getTime())) {
-        return clean(date);
-      }
-
+      if (isNaN(parsedDate.getTime())) return clean(date);
       return parsedDate.toLocaleDateString("en-CA", {
         weekday: "long",
         year: "numeric",
         month: "long",
         day: "numeric",
       });
-    };
-
-    const parseTime = (time) => {
-      if (!time) return null;
-
-      const parsedTime = new Date(`January 1, 2000 ${clean(time)}`);
-
-      if (isNaN(parsedTime.getTime())) {
-        return null;
-      }
-
-      return parsedTime;
     };
 
     const formatTimeFromDate = (date) =>
@@ -75,11 +65,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
     const addMinutes = (time, minutesToAdd) => {
       const parsedTime = parseTime(time);
-
-      if (!parsedTime) {
-        return clean(time);
-      }
-
+      if (!parsedTime) return clean(time);
       parsedTime.setMinutes(parsedTime.getMinutes() + minutesToAdd);
       return formatTimeFromDate(parsedTime);
     };
@@ -87,7 +73,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     async function getEvents() {
       const response = await fetch(SHEET_URL);
       const csv = await response.text();
-
       const parsed = Papa.parse(csv, {
         header: true,
         skipEmptyLines: true,
@@ -104,9 +89,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       if (!events.length) {
         container.innerHTML = `
           <div class="rounded-2xl border border-orange-400/20 bg-stone-900 p-6">
-            <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
-              No trails posted
-            </p>
+            <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">No trails posted</p>
             <h2 class="mt-3 text-2xl font-black">No published hashes yet.</h2>
             <p class="mt-3 text-stone-300">Check back soon.</p>
           </div>
@@ -118,91 +101,42 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         .map((event) => {
           const hasDirections = clean(event.mapUrl) !== "";
           const hasPaypal = clean(event.paypalUrl) !== "";
+          const hasRsvp = clean(event.rsvpUrl) !== "";
 
           return `
             <article class="rounded-2xl border border-orange-400/20 bg-stone-900 p-5">
-              <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
-                Trail #${escapeHtml(event.trailNumber)}
-              </p>
-
+              <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">Trail #${escapeHtml(event.trailNumber)}</p>
               <h2 class="mt-2 text-2xl font-black">${escapeHtml(event.title)}</h2>
-
               <p class="mt-2 text-stone-300">${escapeHtml(event.description)}</p>
 
               <dl class="mt-5 grid gap-3 text-sm sm:grid-cols-2">
-                <div>
-                  <dt class="text-stone-500">Date</dt>
-                  <dd class="font-bold">${formatDate(event.date)}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-stone-500">Pack Gathers</dt>
-                  <dd class="font-bold">${formatTime(event.time)}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-stone-500">Hares Away</dt>
-                  <dd class="font-bold">${addMinutes(event.time, 15)}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-stone-500">On Out</dt>
-                  <dd class="font-bold">${addMinutes(event.time, 30)}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-stone-500">Location</dt>
-                  <dd class="font-bold">${escapeHtml(event.locationName) || "TBA"}</dd>
-                  <dd class="text-stone-400">${escapeHtml(event.address)}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-stone-500">Hares</dt>
-                  <dd class="font-bold">${escapeHtml(event.hares) || "TBA"}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-stone-500">Theme</dt>
-                  <dd class="font-bold">${escapeHtml(event.theme) || "TBA"}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-stone-500">Hash Cash</dt>
-                  <dd class="font-bold">$${escapeHtml(event.hashCash)}</dd>
-                </div>
+                <div><dt class="text-stone-500">Date</dt><dd class="font-bold">${formatDate(event.date)}</dd></div>
+                <div><dt class="text-stone-500">Pack Gathers</dt><dd class="font-bold">${formatTime(event.time)}</dd></div>
+                <div><dt class="text-stone-500">Hares Away</dt><dd class="font-bold">${addMinutes(event.time, 15)}</dd></div>
+                <div><dt class="text-stone-500">On Out</dt><dd class="font-bold">${addMinutes(event.time, 30)}</dd></div>
+                <div><dt class="text-stone-500">Location</dt><dd class="font-bold">${escapeHtml(event.locationName) || "TBA"}</dd><dd class="text-stone-400">${escapeHtml(event.address)}</dd></div>
+                <div><dt class="text-stone-500">Hares</dt><dd class="font-bold">${escapeHtml(event.hares) || "TBA"}</dd></div>
+                <div><dt class="text-stone-500">Theme</dt><dd class="font-bold">${escapeHtml(event.theme) || "TBA"}</dd></div>
+                <div><dt class="text-stone-500">Hash Cash</dt><dd class="font-bold">$${escapeHtml(event.hashCash)}</dd></div>
               </dl>
 
               ${
-                hasDirections || hasPaypal
+                hasDirections || hasPaypal || hasRsvp
                   ? `
                     <div class="mt-6 flex flex-wrap gap-3">
                       ${
-                        hasDirections
-                          ? `
-                            <a
-                              href="${escapeHtml(event.mapUrl)}"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              class="rounded-xl bg-orange-500 px-4 py-2 font-bold text-stone-950 hover:bg-orange-400"
-                            >
-                              Get Directions
-                            </a>
-                          `
+                        hasRsvp
+                          ? `<a href="${escapeHtml(event.rsvpUrl)}" target="_blank" rel="noopener noreferrer" class="rounded-xl bg-orange-500 px-4 py-2 font-bold text-stone-950 hover:bg-orange-400">I'm Coming</a>`
                           : ""
                       }
-
+                      ${
+                        hasDirections
+                          ? `<a href="${escapeHtml(event.mapUrl)}" target="_blank" rel="noopener noreferrer" class="rounded-xl border border-stone-700 px-4 py-2 font-bold hover:bg-stone-800">Get Directions</a>`
+                          : ""
+                      }
                       ${
                         hasPaypal
-                          ? `
-                            <a
-                              href="${escapeHtml(event.paypalUrl)}"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              class="rounded-xl border border-stone-700 px-4 py-2 font-bold hover:bg-stone-800"
-                            >
-                              Pay Hash Cash
-                            </a>
-                          `
+                          ? `<a href="${escapeHtml(event.paypalUrl)}" target="_blank" rel="noopener noreferrer" class="rounded-xl border border-stone-700 px-4 py-2 font-bold hover:bg-stone-800">Pay Hash Cash</a>`
                           : ""
                       }
                     </div>

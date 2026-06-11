@@ -8,79 +8,45 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
   <section class="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-10">
     <section class="grid items-center gap-8 border-b border-orange-400/20 pb-10 md:grid-cols-[1fr_320px]">
       <div class="flex flex-col gap-4">
-        <p class="text-sm font-bold uppercase tracking-[0.3em] text-orange-300">
-          S2H3
-        </p>
-
-        <h1 class="text-4xl font-black tracking-tight sm:text-6xl">
-          Sloppy Saturday Hash House Harriers
-        </h1>
-
+        <p class="text-sm font-bold uppercase tracking-[0.3em] text-orange-300">S2H3</p>
+        <h1 class="text-4xl font-black tracking-tight sm:text-6xl">Sloppy Saturday Hash House Harriers</h1>
         <p class="max-w-2xl text-lg text-stone-300">
           A drinking club with a running problem. Trails, beer, shiggy, songs,
           and questionable decisions on Saturdays.
         </p>
-
         <div class="flex flex-wrap gap-3 pt-2">
-          <a
-            href="/hareline"
-            class="rounded-xl bg-orange-500 px-5 py-3 font-black text-stone-950 hover:bg-orange-400"
-          >
-            View Hare Line
-          </a>
-
-          <a
-            href="/about"
-            class="rounded-xl border border-stone-700 px-5 py-3 font-bold hover:bg-stone-900"
-          >
-            New Hasher?
-          </a>
+          <a href="/hareline" class="rounded-xl bg-orange-500 px-5 py-3 font-black text-stone-950 hover:bg-orange-400">View Hare Line</a>
+          <a href="/about" class="rounded-xl border border-stone-700 px-5 py-3 font-bold hover:bg-stone-900">New Hasher?</a>
         </div>
       </div>
 
-      <img
-        src="/images/s2h3-logo.png"
-        alt="S2H3 logo"
-        class="mx-auto w-full max-w-[280px] rounded-full shadow-2xl shadow-orange-950/30"
-      />
+      <img src="/images/s2h3-logo.png" alt="S2H3 logo" class="mx-auto w-full max-w-[280px] rounded-full shadow-2xl shadow-orange-950/30" />
     </section>
 
     <section id="next-hash">
       <div class="rounded-3xl border border-orange-400/30 bg-stone-900 p-6">
-        <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
-          Loading next hash...
-        </p>
+        <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">Loading next hash...</p>
       </div>
     </section>
 
     <section class="grid gap-4 md:grid-cols-3">
       <div class="rounded-2xl bg-stone-900 p-5">
         <h3 class="text-xl font-black">What is hashing?</h3>
-        <p class="mt-2 text-stone-400">
-          Part trail run, part scavenger hunt, part social club. Follow flour,
-          find beer, sing badly.
-        </p>
+        <p class="mt-2 text-stone-400">Part trail run, part scavenger hunt, part social club. Follow flour, find beer, sing badly.</p>
       </div>
-
       <div class="rounded-2xl bg-stone-900 p-5">
         <h3 class="text-xl font-black">All paces welcome</h3>
-        <p class="mt-2 text-stone-400">
-          Runners, walkers, stumblers, and professional shortcutters are all
-          welcome.
-        </p>
+        <p class="mt-2 text-stone-400">Runners, walkers, stumblers, and professional shortcutters are all welcome.</p>
       </div>
-
       <div class="rounded-2xl bg-stone-900 p-5">
         <h3 class="text-xl font-black">Saturday trails</h3>
-        <p class="mt-2 text-stone-400">
-          Sloppy by name, sloppy by nature. Watch this space for the next hare
-          line.
-        </p>
+        <p class="mt-2 text-stone-400">Sloppy by name, sloppy by nature. Watch this space for the next hare line.</p>
       </div>
     </section>
   </section>
 
   <script define:vars={{ googleMapsApiKey }} type="module">
+
     import Papa from "https://cdn.jsdelivr.net/npm/papaparse@5.4.1/+esm";
 
     const SHEET_URL =
@@ -96,33 +62,22 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
 
+    const parseTime = (time) => {
+      if (!time) return null;
+      const parsedTime = new Date(`January 1, 2000 ${clean(time)}`);
+      return isNaN(parsedTime.getTime()) ? null : parsedTime;
+    };
+
     const formatDate = (date) => {
       if (!date) return "";
-
       const parsedDate = new Date(`${clean(date)}T12:00:00`);
-
-      if (isNaN(parsedDate.getTime())) {
-        return clean(date);
-      }
-
+      if (isNaN(parsedDate.getTime())) return clean(date);
       return parsedDate.toLocaleDateString("en-CA", {
         weekday: "long",
         year: "numeric",
         month: "long",
         day: "numeric",
       });
-    };
-
-    const parseTime = (time) => {
-      if (!time) return null;
-
-      const parsedTime = new Date(`January 1, 2000 ${clean(time)}`);
-
-      if (isNaN(parsedTime.getTime())) {
-        return null;
-      }
-
-      return parsedTime;
     };
 
     const formatTimeFromDate = (date) =>
@@ -139,55 +94,14 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
 
     const addMinutes = (time, minutesToAdd) => {
       const parsedTime = parseTime(time);
-
-      if (!parsedTime) {
-        return clean(time);
-      }
-
+      if (!parsedTime) return clean(time);
       parsedTime.setMinutes(parsedTime.getMinutes() + minutesToAdd);
       return formatTimeFromDate(parsedTime);
-    };
-
-    const getEventDateTime = (event, minutesToAdd = 0) => {
-      const date = clean(event.date);
-      const time = clean(event.time);
-
-      if (!date || !time) return null;
-
-      const parsedTime = parseTime(time);
-      if (!parsedTime) return null;
-
-      const eventDate = new Date(`${date}T00:00:00`);
-      eventDate.setHours(parsedTime.getHours(), parsedTime.getMinutes() + minutesToAdd, 0, 0);
-
-      if (isNaN(eventDate.getTime())) {
-        return null;
-      }
-
-      return eventDate;
-    };
-
-    const getCountdown = (event) => {
-      const eventDate = getEventDateTime(event, 15);
-
-      if (!eventDate) return "Date TBA";
-
-      const now = new Date();
-      const diff = eventDate - now;
-
-      if (diff <= 0) return "Trail is today or already started";
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-
-      return `${days} days, ${hours} hours, ${minutes} minutes`;
     };
 
     async function getEvents() {
       const response = await fetch(SHEET_URL);
       const csv = await response.text();
-
       const parsed = Papa.parse(csv, {
         header: true,
         skipEmptyLines: true,
@@ -198,15 +112,40 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
         .sort((a, b) => clean(a.date).localeCompare(clean(b.date)));
     }
 
+    const getEventDateTime = (event, minutesToAdd = 0) => {
+      const date = clean(event.date);
+      const time = clean(event.time);
+      if (!date || !time) return null;
+
+      const parsedTime = parseTime(time);
+      if (!parsedTime) return null;
+
+      const eventDate = new Date(`${date}T00:00:00`);
+      eventDate.setHours(parsedTime.getHours(), parsedTime.getMinutes() + minutesToAdd, 0, 0);
+      return isNaN(eventDate.getTime()) ? null : eventDate;
+    };
+
+    const getCountdown = (event) => {
+      const eventDate = getEventDateTime(event, 15);
+      if (!eventDate) return "Date TBA";
+
+      const diff = eventDate - new Date();
+      if (diff <= 0) return "Trail is today or already started";
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+
+      return `${days} days, ${hours} hours, ${minutes} minutes`;
+    };
+
     function renderNextHash(event) {
       const container = document.querySelector("#next-hash");
 
       if (!event) {
         container.innerHTML = `
           <section class="rounded-3xl border border-orange-400/30 bg-stone-900 p-6">
-            <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
-              Next Hash
-            </p>
+            <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">Next Hash</p>
             <h2 class="mt-3 text-3xl font-black">No published trails yet</h2>
             <p class="mt-3 text-stone-300">Check back soon.</p>
           </section>
@@ -214,160 +153,86 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
         return;
       }
 
-      const hasMap =
-        clean(event.address) !== "" ||
-        clean(event.locationName) !== "" ||
-        clean(event.mapUrl) !== "";
-
-      const hasGoogleMapEmbed =
-        Boolean(googleMapsApiKey) &&
-        (clean(event.address) !== "" || clean(event.locationName) !== "");
-
+      const hasMap = clean(event.address) !== "" || clean(event.locationName) !== "" || clean(event.mapUrl) !== "";
+      const hasGoogleMapEmbed = Boolean(googleMapsApiKey) && (clean(event.address) !== "" || clean(event.locationName) !== "");
       const hasDirections = clean(event.mapUrl) !== "";
       const hasPaypal = clean(event.paypalUrl) !== "";
+      const hasRsvp = clean(event.rsvpUrl) !== "";
 
-      const addressQuery = encodeURIComponent(
-        `${clean(event.locationName)} ${clean(event.address)}`
-      );
-
+      const addressQuery = encodeURIComponent(`${clean(event.locationName)} ${clean(event.address)}`);
       const mapEmbedUrl = hasGoogleMapEmbed
         ? `https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=${addressQuery}`
         : "";
 
-      const buttonsHtml = `
-        <div class="mt-6 flex flex-wrap gap-3">
-          ${
-            hasDirections
-              ? `
-                <a
-                  href="${escapeHtml(event.mapUrl)}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="rounded-xl bg-orange-500 px-5 py-3 font-black text-stone-950 hover:bg-orange-400"
-                >
-                  Get Directions
-                </a>
-              `
-              : ""
-          }
-
-          ${
-            hasPaypal
-              ? `
-                <a
-                  href="${escapeHtml(event.paypalUrl)}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="rounded-xl border border-stone-700 px-5 py-3 font-bold hover:bg-stone-800"
-                >
-                  Pay Hash Cash
-                </a>
-              `
-              : ""
-          }
-        </div>
-      `;
+      const buttonsHtml =
+        hasDirections || hasPaypal || hasRsvp
+          ? `
+            <div class="mt-6 flex flex-wrap gap-3">
+              ${
+                hasRsvp
+                  ? `<a href="${escapeHtml(event.rsvpUrl)}" target="_blank" rel="noopener noreferrer" class="rounded-xl bg-orange-500 px-5 py-3 font-black text-stone-950 hover:bg-orange-400">I'm Coming</a>`
+                  : ""
+              }
+              ${
+                hasDirections
+                  ? `<a href="${escapeHtml(event.mapUrl)}" target="_blank" rel="noopener noreferrer" class="rounded-xl border border-stone-700 px-5 py-3 font-bold hover:bg-stone-800">Get Directions</a>`
+                  : ""
+              }
+              ${
+                hasPaypal
+                  ? `<a href="${escapeHtml(event.paypalUrl)}" target="_blank" rel="noopener noreferrer" class="rounded-xl border border-stone-700 px-5 py-3 font-bold hover:bg-stone-800">Pay Hash Cash</a>`
+                  : ""
+              }
+            </div>
+          `
+          : "";
 
       const mapHtml = hasMap
         ? hasGoogleMapEmbed
           ? `
             <div class="overflow-hidden rounded-2xl border border-stone-800 bg-stone-950 lg:min-h-[490px]">
-              <iframe
-                title="Next hash map"
-                src="${mapEmbedUrl}"
-                class="h-[360px] w-full lg:h-full lg:min-h-[490px]"
-                loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"
-                allowfullscreen
-              ></iframe>
+              <iframe title="Next hash map" src="${mapEmbedUrl}" class="h-[360px] w-full lg:h-full lg:min-h-[490px]" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
             </div>
           `
           : `
             <div class="flex items-center justify-center rounded-2xl border border-stone-800 bg-stone-950 p-8 lg:min-h-[490px]">
               <div class="text-center">
-                <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
-                  Map unavailable
-                </p>
-                <p class="mt-3 text-stone-400">
-                  Add a Google Maps API key or use the directions button.
-                </p>
+                <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">Map unavailable</p>
+                <p class="mt-3 text-stone-400">Add a Google Maps API key or use the directions button.</p>
               </div>
             </div>
           `
         : `
           <div class="flex items-center justify-center rounded-2xl border border-stone-800 bg-stone-950 p-8 lg:min-h-[490px]">
             <div class="text-center">
-              <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
-                Location TBA
-              </p>
-              <p class="mt-3 text-stone-400">
-                The hare has not published a location yet.
-              </p>
+              <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">Location TBA</p>
+              <p class="mt-3 text-stone-400">The hare has not published a location yet.</p>
             </div>
           </div>
         `;
 
       container.innerHTML = `
         <section class="rounded-3xl border border-orange-400/30 bg-stone-900 p-6 shadow-2xl shadow-orange-950/20">
-          <p class="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
-            Next Hash
-          </p>
+          <p class="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-orange-300">Next Hash</p>
 
           <div class="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
-              <h2 class="text-3xl font-black sm:text-5xl">
-                Trail #${escapeHtml(event.trailNumber)}: ${escapeHtml(event.title)}
-              </h2>
-
-              <p class="mt-4 text-xl text-stone-300">
-                ${escapeHtml(event.description)}
-              </p>
+              <h2 class="text-3xl font-black sm:text-5xl">Trail #${escapeHtml(event.trailNumber)}: ${escapeHtml(event.title)}</h2>
+              <p class="mt-4 text-xl text-stone-300">${escapeHtml(event.description)}</p>
 
               <div class="mt-6 rounded-2xl border border-orange-400/20 bg-stone-950 p-5">
-                <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
-                  Starts In
-                </p>
-                <p id="countdown" class="mt-2 text-3xl font-black">
-                  ${getCountdown(event)}
-                </p>
+                <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">Starts In</p>
+                <p id="countdown" class="mt-2 text-3xl font-black">${getCountdown(event)}</p>
               </div>
 
               <dl class="mt-6 grid gap-4 text-sm sm:grid-cols-2">
-                <div>
-                  <dt class="text-stone-500">Date</dt>
-                  <dd class="font-bold">${formatDate(event.date)}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-stone-500">Pack Gathers</dt>
-                  <dd class="font-bold">${formatTime(event.time)}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-stone-500">Hares Away</dt>
-                  <dd class="font-bold">${addMinutes(event.time, 15)}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-stone-500">On Out</dt>
-                  <dd class="font-bold">${addMinutes(event.time, 30)}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-stone-500">Location</dt>
-                  <dd class="font-bold">${escapeHtml(event.locationName) || "TBA"}</dd>
-                  <dd class="text-stone-400">${escapeHtml(event.address)}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-stone-500">Hares</dt>
-                  <dd class="font-bold">${escapeHtml(event.hares) || "TBA"}</dd>
-                </div>
-
-                <div>
-                  <dt class="text-stone-500">Hash Cash</dt>
-                  <dd class="font-bold">$${escapeHtml(event.hashCash)}</dd>
-                </div>
+                <div><dt class="text-stone-500">Date</dt><dd class="font-bold">${formatDate(event.date)}</dd></div>
+                <div><dt class="text-stone-500">Pack Gathers</dt><dd class="font-bold">${formatTime(event.time)}</dd></div>
+                <div><dt class="text-stone-500">Hares Away</dt><dd class="font-bold">${addMinutes(event.time, 15)}</dd></div>
+                <div><dt class="text-stone-500">On Out</dt><dd class="font-bold">${addMinutes(event.time, 30)}</dd></div>
+                <div><dt class="text-stone-500">Location</dt><dd class="font-bold">${escapeHtml(event.locationName) || "TBA"}</dd><dd class="text-stone-400">${escapeHtml(event.address)}</dd></div>
+                <div><dt class="text-stone-500">Hares</dt><dd class="font-bold">${escapeHtml(event.hares) || "TBA"}</dd></div>
+                <div><dt class="text-stone-500">Hash Cash</dt><dd class="font-bold">$${escapeHtml(event.hashCash)}</dd></div>
               </dl>
 
               ${buttonsHtml}
