@@ -112,6 +112,53 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
         .sort((a, b) => clean(a.date).localeCompare(clean(b.date)));
     }
 
+    async function getRsvpStats(rsvpResponseCsv) {
+      const url = clean(rsvpResponseCsv);
+
+      if (!url) {
+        return null;
+      }
+
+      try {
+        const response = await fetch(url);
+        const csv = await response.text();
+
+        const parsed = Papa.parse(csv, {
+          header: true,
+          skipEmptyLines: true,
+        });
+
+        const uniqueNames = new Set();
+
+        parsed.data.forEach((row) => {
+          const name = clean(row["Hasher Name"]);
+          if (!name) return;
+          uniqueNames.add(name.toLowerCase());
+        });
+
+        return {
+          total: uniqueNames.size,
+        };
+      } catch {
+        return null;
+      }
+    }
+
+    const renderRsvpStats = (stats) => {
+      if (!stats) return "";
+
+      return `
+        <div class="mt-6 rounded-2xl border border-orange-400/20 bg-stone-950 p-5">
+          <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">
+            RSVP
+          </p>
+          <p class="mt-2 text-3xl font-black">
+            ${stats.total} ${stats.total === 1 ? "Hasher" : "Hashers"} Cumming
+          </p>
+        </div>
+      `;
+    };
+
     const getEventDateTime = (event, minutesToAdd = 0) => {
       const date = clean(event.date);
       const time = clean(event.time);
@@ -139,7 +186,7 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
       return `${days} days, ${hours} hours, ${minutes} minutes`;
     };
 
-    function renderNextHash(event) {
+    async function renderNextHash(event) {
       const container = document.querySelector("#next-hash");
 
       if (!event) {
@@ -152,6 +199,8 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
         `;
         return;
       }
+
+      const rsvpStats = await getRsvpStats(event.rsvpResponseCsv);
 
       const hasMap = clean(event.address) !== "" || clean(event.locationName) !== "" || clean(event.mapUrl) !== "";
       const hasGoogleMapEmbed = Boolean(googleMapsApiKey) && (clean(event.address) !== "" || clean(event.locationName) !== "");
@@ -224,6 +273,8 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
                 <p class="text-sm font-bold uppercase tracking-[0.25em] text-orange-300">Starts In</p>
                 <p id="countdown" class="mt-2 text-3xl font-black">${getCountdown(event)}</p>
               </div>
+
+              ${renderRsvpStats(rsvpStats)}
 
               <dl class="mt-6 grid gap-4 text-sm sm:grid-cols-2">
                 <div><dt class="text-stone-500">Date</dt><dd class="font-bold">${formatDate(event.date)}</dd></div>
