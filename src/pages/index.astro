@@ -300,8 +300,18 @@ const googleMapsApiKey = import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY;
       }, 60000);
     }
 
+    const getNextEvent = (events) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      return events.find((event) => {
+        const eventDate = new Date(`${clean(event.date)}T00:00:00`);
+        return !isNaN(eventDate.getTime()) && eventDate >= today;
+      });
+    };
+
     getEvents()
-      .then((events) => renderNextHash(events[0]))
+      .then((events) => renderNextHash(getNextEvent(events)))
       .catch(() => {
         document.querySelector("#next-hash").innerHTML = `
           <section class="rounded-3xl border border-orange-400/30 bg-stone-900 p-6">
