@@ -2,26 +2,106 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 
 const markings = [
-  { mark: "HH →", name: "True Trail", note: "You are on true trail." },
-  { mark: "•", name: "On-One", note: "First dot after a check." },
-  { mark: "••", name: "On-Two", note: "Second dot." },
-  { mark: "•••", name: "On-On", note: "Third dot confirms trail." },
-  { mark: "⊙", name: "Check", note: "Trail starts again from here. Find the next mark." },
-  { mark: "⊙ ⊙", name: "Boob Check", note: "Special check. Rules explained by the hare." },
-  { mark: "⊙⊙↧", name: "Dick Check", note: "Special check. Rules explained by the hare." },
-  { mark: "••• / =", name: "False", note: "Bad trail. Go back to the last check." },
-  { mark: "YBF", name: "You’ve Been Fucked", note: "Definitely wrong. Return to trail." },
-  { mark: "↶", name: "Check Back", note: "Go back one mark/check." },
-  { mark: "↶ 69", name: "Check Back 69", note: "Go back 69 dots or as directed." },
-  { mark: "↗ ↖", name: "Ambler / Dasher Split", note: "Walkers and runners split." },
-  { mark: "⋀", name: "Merge", note: "Trails rejoin." },
-  { mark: "AS", name: "All Song", note: "All song candidates regroup to sing." },
-  { mark: "SC", name: "Song Check", note: "At least two people gather to sing." },
-  { mark: "🎣", name: "Fish Hook", note: "Previous two people or group return back." },
-  { mark: "BC", name: "Beer Check", note: "Mid-trail beer stop." },
-  { mark: "BN", name: "Beer Near", note: "Beer is close." },
-  { mark: "ON-IN", name: "Finish", note: "Trail is ending." },
-  { mark: "TF / FE", name: "Turkey / Eagle Split", note: "Short route / long route split." },
+  {
+    image: "/images/markings/TT.png",
+    name: "True Trail",
+    note: "Never Lies, look for next dot"
+  },
+  {
+    image: "/images/markings/ONONE.png",
+    name: "On-One",
+    note: "ON ONE!"
+  },
+  {
+    image: "/images/markings/ONTWO.png",
+    name: "On-Two",
+    note: "ON TWO!"
+  },
+  {
+    image: "/images/markings/ONON.png",
+    name: "On-On",
+    note: "ON-ON! If you don't see a third dot, that's a blow job. Go back to check."
+  },
+  {
+    image: "/images/markings/CHECK.png",
+    name: "Check",
+    note: "Looing in 369 degress for next mark"
+  },
+  {
+    image: "/images/markings/BOOBCHECK.png",
+    name: "Boob Check",
+    note: "Let's see dem titties!"
+  },
+  {
+    image: "/images/markings/DICKCHECK.png",
+    name: "Dick Check",
+    note: "Whip it out!"
+  },
+  {
+    image: "/images/markings/FALSE.png",
+    name: "False Trail",
+    note: "Got back to check"
+  },
+  {
+    image: "/images/markings/YBF.png",
+    name: "You've Been Fucked",
+    note: "Enjoy the walk back to check"
+  },
+  {
+    image: "/images/markings/CHECKBACK.png",
+    name: "Check Back",
+    note: "Trail exists between here and check"
+  },
+  {
+    image: "/images/markings/CHECKBACKDOT.png",
+    name: "Check Back #",
+    note: "Go back # of dots and check from there"
+  },
+  {
+    image: "/images/markings/ADSPLIT.png",
+    name: "Ambler / Dasher Split",
+    note: "Walkers and runners split."
+  },
+  {
+    image: "/images/markings/TESPLIT.png",
+    name: "Turkey / Eagle Split",
+    note: "Short and long trail split."
+  },
+  {
+    image: "/images/markings/MERGE.png",
+    name: "Merge",
+    note: "TE and AD splits merge back to one pack"
+  },
+  {
+    image: "/images/markings/ALLSONG.png",
+    name: "All Song",
+    note: "Wait for everyone and sing a song. If on split only wait for your pack half."
+  },
+  {
+    image: "/images/markings/SONGCHECK.png",
+    name: "Song Check",
+    note: "Sing a song and move one"
+  },
+  {
+    image: "/images/markings/FISHHOOK.png",
+    name: "Fish Hook",
+    note: "Grab that beer and bring it to the DFL"
+  },
+  {
+    image: "/images/markings/BEERCHECK.png",
+    name: "Beer Check",
+    note: "Mid-trail beer stop."
+  },
+  {
+    image: "/images/markings/BEERNEAR.png",
+    name: "Beer Near",
+    note: "Beer is close."
+  },
+  {
+    image: "/images/markings/ONIN.png",
+    name: "On-In",
+    note: "Finish."
+  }
 ];
 
 ---
@@ -60,20 +140,27 @@ const markings = [
     </div>
 
     <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {markings.map((item) => (
-        <article class="rounded-2xl border border-orange-400/20 bg-stone-900 p-5">
-          <div class="flex min-h-24 items-center justify-center rounded-xl bg-stone-950 p-4">
-            <span class="text-center text-4xl font-black text-orange-300">
-              {item.mark}
-            </span>
-          </div>
+{markings.map((marking) => (
+  <article class="rounded-2xl border border-orange-400/20 bg-stone-900 p-5">
+    <div class="flex items-center gap-4">
+      <img
+        src={marking.image}
+        alt={marking.name}
+        class="h-32 w-32 rounded-lg bg-white object-contain p-2"
+      />
 
-          <h2 class="mt-4 text-xl font-black">{item.name}</h2>
-          <p class="mt-2 text-sm leading-relaxed text-stone-400">
-            {item.note}
-          </p>
-        </article>
-      ))}
+      <div>
+        <h3 class="text-xl font-black">
+          {marking.name}
+        </h3>
+
+        <p class="mt-2 text-stone-300">
+          {marking.note}
+        </p>
+      </div>
+    </div>
+  </article>
+))}
     </div>
 
     <div class="mt-8 rounded-2xl border border-orange-400/20 bg-stone-900 p-5">
