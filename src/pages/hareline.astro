@@ -83,8 +83,37 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         .sort((a, b) => clean(a.date).localeCompare(clean(b.date)));
     }
 
+    const toGoogleSheetCsvUrl = (value) => {
+      const url = clean(value);
+      if (!url) return "";
+
+      try {
+        const parsedUrl = new URL(url);
+
+        if (parsedUrl.hostname !== "docs.google.com") {
+          return url;
+        }
+
+        // Published Google Sheet URLs can already return CSV directly.
+        if (parsedUrl.pathname.includes("/spreadsheets/d/e/")) {
+          parsedUrl.searchParams.set("output", "csv");
+          return parsedUrl.toString();
+        }
+
+        // Convert a normal /edit or /view Google Sheet link into a CSV export URL.
+        const match = parsedUrl.pathname.match(/\/spreadsheets\/d\/([^/]+)/);
+        if (!match) return url;
+
+        const hashParams = new URLSearchParams(parsedUrl.hash.replace(/^#/, ""));
+        const gid = parsedUrl.searchParams.get("gid") || hashParams.get("gid") || "0";
+        return `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv&gid=${encodeURIComponent(gid)}`;
+      } catch {
+        return url;
+      }
+    };
+
     async function getRsvpStats(rsvpResponseCsv) {
-      const url = clean(rsvpResponseCsv);
+      const url = toGoogleSheetCsvUrl(rsvpResponseCsv);
 
       if (!url) {
         return null;
@@ -92,25 +121,43 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
       try {
         const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`RSVP sheet returned ${response.status}`);
+        }
+
         const csv = await response.text();
+        if (/^\s*<!doctype html/i.test(csv) || /^\s*<html/i.test(csv)) {
+          throw new Error("RSVP link returned HTML instead of CSV. Check Google Sheet sharing permissions.");
+        }
 
         const parsed = Papa.parse(csv, {
           header: true,
           skipEmptyLines: true,
+          transformHeader: (header) => clean(header).replace(/^\uFEFF/, ""),
         });
 
-        const uniqueNames = new Set();
+        const fields = parsed.meta.fields || [];
+        const normalizedField = (field) => clean(field).toLowerCase().replace(/[^a-z0-9]/g, "");
+        const nameField =
+          fields.find((field) => normalizedField(field) === "hashername") ||
+          fields.find((field) => normalizedField(field).includes("hasher") && normalizedField(field).includes("name")) ||
+          fields.find((field) => normalizedField(field) === "name");
 
+        if (!nameField) {
+          console.warn("Could not find a Hasher Name column in RSVP sheet. Columns found:", fields);
+          return { total: parsed.data.filter((row) => Object.values(row).some((value) => clean(value))).length };
+        }
+
+        const uniqueNames = new Set();
         parsed.data.forEach((row) => {
-          const name = clean(row["Hasher Name"]);
+          const name = clean(row[nameField]);
           if (!name) return;
           uniqueNames.add(name.toLowerCase());
         });
 
-        return {
-          total: uniqueNames.size,
-        };
-      } catch {
+        return { total: uniqueNames.size };
+      } catch (error) {
+        console.warn("Could not load RSVP responses:", error);
         return null;
       }
     }
